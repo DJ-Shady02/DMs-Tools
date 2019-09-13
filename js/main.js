@@ -41,3 +41,23 @@ function setDefaultPage() {
 }
 
 setDefaultPage();
+
+// =========== Firebase Application functionality =========== //
+
+// Your web app's Firebase configuration
+var firebaseConfig = {
+ apiKey: "AIzaSyD8hDricLqN06iKIlKq_s3EkWa-L6ghg1o",
+ authDomain: "dm-s-tools-examen.firebaseapp.com",
+ databaseURL: "https://dm-s-tools-examen.firebaseio.com/",
+ projectId: "dm-s-tools-examen",
+ storageBucket: "",
+ messagingSenderId: "1024990819908",
+ appId: "1:1024990819908:web:8df40e3b4b10f08dbeee11"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+//Make auth and firestore references
+const auth = firebase.auth();
+const db = firebase.firestore();
+db.settings({experimentalForceLongPolling:true});
