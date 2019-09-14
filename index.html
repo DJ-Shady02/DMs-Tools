@@ -14,11 +14,11 @@
 <body>
   <!-- tabbar navigation -->
   <nav class="tabbar">
-    <a href="#home" onclick="showPage('home')">Tavern</a>
-    <a href="#party" onclick="showPage('party')">Party Manager</a>
-    <a href="#builder" onclick="showPage('builder')">Encounter Builder</a>
-    <a href="#tracker" onclick="showPage('tracker')">Encounter Tracker</a>
-    <a href="#lore" onclick="showPage('lore')">Lore Wikipedia</a>
+    <a href="#home" onclick="showPage('home')"><img src="img/icon-tavern.png" alt="tavern button icon"></a>
+    <a href="#party" onclick="showPage('party')"><img src="img/icon-party.png" alt="party manager button icon"></a>
+    <a href="#builder" onclick="showPage('builder')"><img src="img/icon-builder.png" alt="encounter builder button icon"></a>
+    <a href="#tracker" onclick="showPage('tracker')"><img src="img/icon-tracker.png" alt="encounter tracker button icon"></a>
+    <a href="#lore" onclick="showPage('lore')"><img src="img/icon-lore.png" alt="lore wikipedia button icon"></a>
   </nav>
 
   <!-- pages -->
@@ -41,6 +41,30 @@
     <header class="topbar">
       <h2>Encounter Builder</h2>
     </header>
+
+    <!-- To-do: Header, Account Menu -->
+    <!-- To-do: Encounter Name, Encounter Party Management -->
+    <!-- To-do: Search, filter -->
+
+    <!-- Table of monsters -->
+    <table id="monsterTable">
+      <tr>
+        <th>
+          <!-- Monster Avatar -->
+        </th>
+        <th>CR</th>
+        <th>NAME</th>
+        <th>ADD</th>
+      </tr>
+    </table>
+    <section id="encounterSummary">
+      <section id="difficulty">
+      </section>
+      <section id="summaryBasket">
+        <table id="summaryTable">
+        </table>
+      </section>
+    </section>
   </section>
 
   <!-- encounter tracker page -->

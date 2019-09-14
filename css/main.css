@@ -53,6 +53,8 @@ h1 {
   left: 0;
   right: 0;
   z-index: 9999;
+  display: flex;
+  justify-content: center;
 }
 
 /* Style the links inside the navigation bar */
@@ -60,7 +62,7 @@ h1 {
   display: inline-block;
   color: var(--text-color-light);
   text-align: center;
-  padding: 20px 16px;
+  padding: 8px 16px;
   text-decoration: none;
   font-size: 0.8em;
   letter-spacing: 0.1em;
@@ -77,6 +79,11 @@ h1 {
 .tabbar a.active {
   background-color: var(--light-green);
   color: var(--text-color-light);
+}
+
+/* Control height on tab icons */
+.tabbar img {
+  height: 28px;
 }
 
 /* ---------- page styling ---------- */
