@@ -16,7 +16,7 @@
   <nav class="tabbar">
     <a href="#home" onclick="showPage('home')"><img src="img/icon-tavern.png" alt="tavern button icon"></a>
     <a href="#party" onclick="showPage('party')"><img src="img/icon-party.png" alt="party manager button icon"></a>
-    <a href="#builder" onclick="showPage('builder')"><img src="img/icon-builder.png" alt="encounter builder button icon"></a>
+    <a href="#builder" onclick="showPage('builder'), loadMonsters()"><img src="img/icon-builder.png" alt="encounter builder button icon"></a>
     <a href="#tracker" onclick="showPage('tracker')"><img src="img/icon-tracker.png" alt="encounter tracker button icon"></a>
     <a href="#lore" onclick="showPage('lore')"><img src="img/icon-lore.png" alt="lore wikipedia button icon"></a>
   </nav>
@@ -42,8 +42,12 @@
       <h2>Encounter Builder</h2>
     </header>
 
-    <!-- To-do: Header, Account Menu -->
-    <!-- To-do: Encounter Name, Encounter Party Management -->
+    <!-- To-do: Header, Account Menu, Encounter Name, Encounter Party Management -->
+    <section>
+      <button id="builderPartyManager">Choose Party</button>
+      <p id="builderPartyInfo"># Characters | Avg. Level #</p>
+    </section>
+
     <!-- To-do: Search, filter -->
 
     <!-- Table of monsters -->
@@ -58,7 +62,23 @@
       </tr>
     </table>
     <section id="encounterSummary">
+      <h3>Encounter Summary</h3>
       <section id="difficulty">
+        <div>
+          <p><b>Difficulty</b><br>None</p>
+          <p><b>Total XP</b><br>0 XP</p>
+          <p><b>Adjusted XP (AXP)</b><br>0 XP (x1)</p>
+        </div>
+        <div>
+          <p><b>Easy:</b> 0 XP</p>
+          <p><b>Medium:</b> 0 XP</p>
+          <p><b>Hard:</b> 0 XP</p>
+          <p><b>Deadly:</b> 0 XP</p>
+          <p><b>Daily Budget:</b> 0 XP</p>
+        </div>
+        <div id="difficultyBar" style="width: 100%; height: 20px; background-color: #777777;">
+          <div id="difficultyBarFill" style="width: 50%; height: 20px; background-color: #65B52F;"></div>
+        </div>
       </section>
       <section id="summaryBasket">
         <table id="summaryTable">
