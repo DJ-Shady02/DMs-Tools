@@ -42,7 +42,17 @@ function setDefaultPage() {
 
 setDefaultPage();
 
-// =========== Firebase Application functionality =========== //
+// show a spinning loader when loading
+function showLoader(show) {
+  let loader = document.querySelector('#loader');
+  if (show) {
+    loader.classList.remove("hide");
+  } else {
+    loader.classList.add("hide");
+  }
+}
+
+// =========== Firebase Application configuration =========== //
 
 // Your web app's Firebase configuration
 var firebaseConfig = {
@@ -62,6 +72,81 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 db.settings({
   experimentalForceLongPolling: true
+});
+
+// =========== Firebase sign in functionality =========== //
+
+// Listen for auth status changes
+auth.onAuthStateChanged(function(user) {
+  let tabbar = document.querySelector('#tabbar');
+  console.log("User: ", user);
+  if (user) { // if user exists and is authenticated
+    setDefaultPage(); // Go to home
+    showNav(true); // Show nav
+  } else { // if user is not logged in
+    showPage("login");
+    showNav(false); // Hide nav
+    // Show login form
+    document.querySelector("#login-form").innerHTML = `
+    <div id="auth-header">
+      <h1>Sign in</h1>
+    </div>
+    <div id="auth-content">
+      <label for="email">Email</label>
+      <input type="email" id="login-email" placeholder="type here" required />
+      <label for="password">Password</label>
+      <input type="password" id="login-password" placeholder="type here" required>
+    </div>
+    <div id="auth-actions">
+      <a id="go-to-sign-up" onclick="goToSignUp()">No account? Sign up here!</a>
+      <button type="submit">Sign in</button>
+    </div>
+    `;
+    console.log(document.querySelector('#login-form'));
+  }
+  showLoader(false);
+});
+
+// Show or hide navigation
+function showNav(show) {
+  let nav = document.querySelector('#tabbar');
+  if (show) { // If show = true
+    // Show navigation
+    nav.innerHTML = `
+    <a onclick="showPage('home')"><img src="img/icon-tavern.png" alt="tavern button icon"></a>
+    <a onclick="showPage('party')"><img src="img/icon-party.png" alt="party manager button icon"></a>
+    <a onclick="showPage('builder'), loadMonsters()"><img src="img/icon-builder.png" alt="encounter builder button icon"></a>
+    <a onclick="showPage('tracker')"><img src="img/icon-tracker.png" alt="encounter tracker button icon"></a>
+    <a onclick="showPage('lore')"><img src="img/icon-lore.png" alt="lore wikipedia button icon"></a>
+    `;
+  } else { // If show = false
+    nav.innerHTML = ""; // Make nav empty
+  }
+}
+
+// Login
+const loginForm = document.querySelector('#login-form');
+loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  // Get user info
+  const email = document.querySelector('#login-email').value;
+  const password = document.querySelector('#login-password').value;
+  console.log(email, password);
+
+  // If email and password is correct
+  auth.signInWithEmailAndPassword(email, password).then(cred => {
+    loginForm.reset();
+    showPage("home");
+  });
+});
+
+// Logout
+const logout = document.querySelector('#logout');
+console.log(logout);
+logout.addEventListener('click', (e) => {
+  e.preventDefault();
+  auth.signOut();
 });
 
 // =========== Encounter Builder functionality =========== //
@@ -134,7 +219,7 @@ function loadMonsters() {
       document.querySelector("#monsterTable").innerHTML += htmlTemplate;
 
       // Also, call all other functions which needs to load; (helps to append on refresh)
-      // Some of these functions rely on monsters to have finished loading before being called. therefore we called them from here.
+      // Some of these functions rely on monsters to have finished loading before being called. therefore we called them from here instead of if (location.hash == '#builder').
       tempCreateParty();
       appendPartyOnLoad();
       appendSummary();
@@ -164,11 +249,22 @@ function addToSummary(monsterName) {
   appendSummary();
 }
 
-function deleteFromSummary(summaryIndex) {
+function deleteFromSummary(monsterName) {
   // Get array from session storage
   let selectedMonsters = JSON.parse(sessionStorage.getItem("selectedMonsters"));
-  // Remove the value from the array
-  selectedMonsters.splice(summaryIndex, 1);
+
+  // Remove the first value equal to monsterName from the !!!BACK!!! of the array
+  // If not from the back, monsters will skift up and down on delete
+  console.log("about to delete ", monsterName);
+  for (let i = selectedMonsters.length - 1; i >= 0; i--) {
+    console.log("I swear i will do it!");
+    if (selectedMonsters[i] == monsterName) {
+      // Remove the item
+      selectedMonsters.splice(i, 1);
+      // Stop looping, as we don't want more to be deleted
+      break;
+    }
+  }
   // Update array to session storage
   sessionStorage.setItem("selectedMonsters", JSON.stringify(selectedMonsters));
 
@@ -237,40 +333,59 @@ function appendSummary() {
   // Get array from session storage
   let selectedMonsters = JSON.parse(sessionStorage.getItem("selectedMonsters"));
 
-  // Loop through selected monsters
-  let htmlTemplate = "";
+  // Ready the table by clearing
+  document.querySelector("#summaryTable").innerHTML = "";
 
+  // Loop through selected monsters
   // But first check if anything to append, else error
   if (JSON.parse(selectedMonsters == null)) {
     console.log("No summary to append");
     return;
   } else {
-    // Variable to get index without changing from a for of loop
-    let i = 0;
+    // Ready array to store appended Monsters
+    let appendedMonsters = [];
 
     for (let selectedMonster of selectedMonsters) {
       // Get the index of selected monster from the global monster array
       let monsterIndex = monsters.findIndex(function(monsterObject) {
         return monsterObject.name == selectedMonster;
       });
-      // Append to the DOM with the given index
-      htmlTemplate += `
-      <tr>
-        <td><img src="img/monster-avatar.png"></td>
-        <td><b>${selectedMonster /* monsters[monsterIndex].name */}</b><br>${monsters[monsterIndex].size} ${monsters[monsterIndex].type}</td>
-        <td>CR: ${monsters[monsterIndex].challenge_rating}<br>XP: ${calcXpFromCr(monsters[monsterIndex].challenge_rating)}</td>
-        <td><button type="button" onclick="addToSummary('${selectedMonster}')">+</button><br><button type="button" onclick="deleteFromSummary('${i}')">-</button></td>
-      </tr>
-      `;
-      i++;
+
+      // "Custom" else to act as an else to the if in the for loop
+      let customElse = true;
+      // Loop to check if a similar monster was appended
+      console.log("Different Monsters Appended", appendedMonsters);
+      for (let appendedMonster of appendedMonsters) {
+        if (selectedMonster == appendedMonster) {
+          let counter = JSON.parse(document.querySelector(`#counter${monsterIndex}`).innerHTML);
+          counter++;
+          document.querySelector(`#counter${monsterIndex}`).innerHTML = counter;
+          // If similar monster was appended, don't run the rest of the function.
+          customElse = false;
+        }
+      }
+      // Else of the if in for loop
+      if (customElse == true) {
+        // Else (since it won't run the "return") append as new monster
+        // Append to the DOM with the given index
+        document.querySelector("#summaryTable").innerHTML += `
+        <tr>
+          <td><img src="img/monster-avatar.png"></td>
+          <td><b>${selectedMonster /* monsters[monsterIndex].name */}</b><br>${monsters[monsterIndex].size} ${monsters[monsterIndex].type}</td>
+          <td>CR: ${monsters[monsterIndex].challenge_rating}<br>XP: ${calcXpFromCr(monsters[monsterIndex].challenge_rating)}</td>
+          <td id="counter${monsterIndex}">1</td>
+          <td><button type="button" onclick="addToSummary('${selectedMonster}')">+</button><br><button type="button" onclick="deleteFromSummary('${selectedMonster}')">-</button></td>
+        </tr>
+        `;
+        // Only push to appendedMonsters if new monster
+        appendedMonsters.push(selectedMonster);
+      }
     }
   }
-  // Append happens here;
-  document.querySelector("#summaryTable").innerHTML = htmlTemplate;
 }
 
 // =========== Encounter Builder: Calculators =========== //
-document.getElementById
+
 // Calculation of the xp value for the 34 different challenge ratings, as XP is not given in the JSON. Say hello to if sentences.
 function calcXpFromCr(CR /* Challenge Rating */ ) {
   if (CR == "0") {
