@@ -52,15 +52,15 @@ function showLoader(show) {
   }
 }
 
-// =========== Firebase Application configuration =========== //
+// =========== Firebase Application functionality =========== //
 
 // Your web app's Firebase configuration
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyD8hDricLqN06iKIlKq_s3EkWa-L6ghg1o",
   authDomain: "dm-s-tools-examen.firebaseapp.com",
-  databaseURL: "https://dm-s-tools-examen.firebaseio.com/",
+  databaseURL: "https://dm-s-tools-examen.firebaseio.com",
   projectId: "dm-s-tools-examen",
-  storageBucket: "",
+  storageBucket: "dm-s-tools-examen.appspot.com",
   messagingSenderId: "1024990819908",
   appId: "1:1024990819908:web:8df40e3b4b10f08dbeee11"
 };
@@ -70,9 +70,13 @@ firebase.initializeApp(firebaseConfig);
 //Make auth and firestore references
 const auth = firebase.auth();
 const db = firebase.firestore();
+
 db.settings({
   experimentalForceLongPolling: true
 });
+const partyRef = db.collection("parties");
+
+let selectedPartyId = "";
 
 // =========== Firebase sign in functionality =========== //
 
@@ -148,6 +152,242 @@ logout.addEventListener('click', (e) => {
   e.preventDefault();
   auth.signOut();
 });
+
+// ========== Party Manager functionality ====== //
+
+partyRef.onSnapshot(function(snapshotData) {
+  let parties = snapshotData.docs;
+  appendParties(parties);
+});
+
+function appendParties(parties) {
+  let htmlTemplate = "";
+  for (let party of parties) {
+    console.log(party.id);
+    console.log(party.data().name);
+    htmlTemplate += `
+    <article>
+      <h3>${party.data().name}</h3>
+      <p># of characters ${party.data().amount}</p>
+      <p>|</p>
+      <p>Avg. level ${party.data().level}</p>
+      <button onclick="saveSessionStorage">Use Party</button>
+      <button onclick="selectParty('${party.id}', '${party.data().name}', '${party.data().level}' )">Edit</button>
+      <button onclick="deleteParty('${party.id}')">Delete</button>
+    </article>
+    `;
+  }
+  document.querySelector('#party-container').innerHTML = htmlTemplate;
+
+}
+
+
+
+// add another character input box ///
+
+
+// W3S modal functionality //
+// Get the modal
+let modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+//let btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+let span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+function openModal(btn) {
+  modal.style.display = "block";
+}
+
+function closeModal(btn) {
+  modal.style.display = "none";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+// ===== CREATE PARTY =======//
+function createParty() {
+  // references to the input fields
+  let newParty = [];
+  for (let i = 0; i < characterCount; i++) {
+    let nameInput = document.querySelector('#name');
+    let levelInput = document.querySelector(`#character${i}Level`);
+    console.log(nameInput.value);
+    console.log(levelInput.value);
+
+    let newCharacter = {
+      name: nameInput.value,
+      level: levelInput.value
+    };
+    newParty.push(newCharacter);
+  }
+
+  partyRef.add(newParty);
+}
+
+//character count //
+function appendCharacterInputs() {
+  let characterCount = sessionStorage.getItem("characterCount");
+  let newParty = [];
+
+  for (let i = 0; i < characterCount - 1; i++) {
+    let nameInput = document.querySelector('#name');
+    let levelInput = document.querySelector(`#character${i}Level`);
+
+    let newCharacter = {
+      name: nameInput.value,
+      level: levelInput.value
+    };
+    newParty.push(newCharacter);
+  }
+
+  document.querySelector('#characterContainer').innerHTML = "";
+  let htmlTemplate = "";
+  for (let i = 0; i < characterCount; i++) {
+    htmlTemplate += `
+    <div id="newCharacter">
+    <span id="slider${i}Value">1</span>
+    <input oninput="updateSliderValue(${i})" class="slider" id="character${i}Level" type="range" min="1" max="20" value="${returnCharacterDefaults(newParty, i, "level")}">
+    </div>
+    `
+  }
+  document.querySelector('#characterContainer').innerHTML = htmlTemplate;
+}
+
+// If no values given, return defaults
+function returnCharacterDefaults(characterArray, iteration, property) {
+  // Check if characterArray[i].property exists
+  if (characterArray[iteration].property == null) {
+    console.log("I set value to default");
+    if (property == "level") {
+      return 1; // Return default
+    } else if (property == "name") {
+      return;
+    }
+  } else {
+    console.log("I set value to the "+property+" value");
+    return characterArray[iteration].property; // Return value
+  }
+}
+
+function resetCharacterCount() {
+  let characterCount = 1;
+  sessionStorage.setItem("characterCount", characterCount);
+}
+
+function addMember() {
+  let characterCount = sessionStorage.getItem("characterCount");
+  characterCount++;
+  sessionStorage.setItem("characterCount", characterCount);
+  appendCharacterInputs();
+
+}
+
+function deleteMember() {
+  sessionStorage.getItem(characterCount);
+  characterCount--;
+  sessionStorage.setItem("characterCount", characterCount);
+
+}
+
+// ========== UPDATE PARTY ==========//
+
+// function selectParty(id, name, members, level) {
+// references to the input fields
+//   let nameInput = document.querySelector('#name-update');
+// let membersInput = document.querySelector('#members-update');
+// let levelInput = document.querySelector('#level-update');
+// nameInput.value = name;
+// membersInput.value = members;
+// levelInput.value = level;
+// console.log(id);
+// selectedPartyId = id;
+// }
+
+// function updateParty() {
+// let nameInput = document.querySelector('#name-update');
+//   let membersInput = document.querySelector('#members-update');
+//   let levelInput = document.querySelector('#level-update');
+
+//   let partyToUpdate = {
+//   name: nameInput.value,
+//   members: membersInput.value,
+//   level: levelInput.value
+//   };
+//   partyRef.doc(selectedPartyId).set(partyToUpdate);
+
+// }
+
+// ========== DELETE PARTY ========== //
+function deleteParty(id) {
+  console.log(id);
+
+
+  let result = confirm("Do you want to delete this party?");
+  if (result == true) {
+    partyRef.doc(id).delete();
+  }
+
+}
+
+
+//======== Add party member ======//
+
+
+function updateSliderValue(index) {
+  let slider = document.querySelector(`#character${index}Level`);
+  let output = document.querySelector(`#slider${index}Value`);
+  output.innerHTML = slider.value;
+
+}
+
+
+//====== SAVE TO SESSION STORAGE ======//
+function saveSessionStorage() {
+  let i = 0;
+  let name = document.querySelector("#name").value;
+  let level = document.querySelector(`#character${i}Level`).value;
+  console.log(name);
+  console.log(level);
+
+  // store value in session storage
+  sessionStorage.setItem("name", name);
+  sessionStorage.setItem("level", level);
+  // call loadFromStorage to update displayed values
+  loadFromStorage();
+
+  let sessionSavedName = sessionStorage.getItem("name");
+  let sessionSavedLevel = sessionStorage.getItem("level");
+  console.log("sessionSavedName", sessionSavedName);
+  console.log("sessionSavedLevel", sessionSavedLevel);
+
+  // set input field with email values from storage
+
+  document.querySelector("#name").value = sessionSavedName;
+  document.querySelector("`#character${i}Level`").value = sessionSavedLevel;
+
+  // set span tags with email values from storage
+
+
+}
+
+loadFromStorage();
+
+
+
+
 
 // =========== Encounter Builder functionality =========== //
 

@@ -86,15 +86,15 @@ h1 {
   height: 28px;
 }
 
-/* ---------- profile menu styling ---------- */
-#logout {
-  height: 20px;
-  width: 20px;
-  background-color: black;
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 9999;
+/* ---------- profile menu styling ---------- */	
+#logout {	
+  height: 20px;	
+  width: 20px;	
+  background-color: black;	
+  position: fixed;	
+  top: 10px;	
+  right: 10px;	
+  z-index: 9999;	
 }
 
 /* ---------- page styling ---------- */
@@ -208,4 +208,64 @@ input {
   visibility: hidden;
   opacity: 0;
   transition: visibility 0s 0.4s, opacity 0.4s linear;
+}
+
+/* grid-container*/
+.grid-container {
+  display: grid;
+  grid-template-columns: 100%;
+  padding: 10px;
+}
+
+.grid-container>article {
+  text-align: center;
+  padding: 10px;
+}
+
+.grid-container>article img {
+  max-width: 300px;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.grid-container>article h3 {
+  font-weight: 200;
+}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
