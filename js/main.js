@@ -78,6 +78,19 @@ const partyRef = db.collection("parties");
 
 let selectedPartyId = "";
 
+// =========== Variables to initialize =========== //
+
+// Easy reference to the '5e SRD monster' json link
+let monsterJson = 'https://dl.dropboxusercontent.com/s/iwz112i0bxp2n4a/5e-SRD-Monsters.json'
+// NOTE: monsters in Dungeons and Dragons all have unique names. Therefore, we can treat names as ids.
+
+let monsters = [];
+
+// If refresh in #builder
+if (location.hash == "#builder") {
+    loadMonsters();
+};
+
 // =========== Firebase sign in functionality =========== //
 
 // Listen for auth status changes
@@ -102,7 +115,7 @@ auth.onAuthStateChanged(function(user) {
       <input type="password" id="login-password" placeholder="type here" required>
     </div>
     <div id="auth-actions">
-      <a id="go-to-sign-up" onclick="goToSignUp()">No account? Sign up here!</a>
+      <a id="go-to-sign-up" onclick="goToSignup()">No account? Sign up here!</a>
       <button type="submit">Sign in</button>
     </div>
     `;
@@ -129,50 +142,111 @@ function showNav(show) {
 }
 
 // Login
-const loginForm = document.querySelector('#login-form');
-loginForm.addEventListener('submit', e => {
-  e.preventDefault();
-
+function login() {
   // Get user info
-  const email = document.querySelector('#login-email').value;
-  const password = document.querySelector('#login-password').value;
-  console.log(email, password);
+  let email = document.querySelector('#login-email').value;
+  let password = document.querySelector('#login-password').value;
 
-  // If email and password is correct
+  // Sign up the user
   auth.signInWithEmailAndPassword(email, password).then(cred => {
+    // Reset the form field input
+    let loginForm = document.querySelector('#login-form');
     loginForm.reset();
+    // Enter home page
     showPage("home");
   });
-});
+}
 
 // Logout
 const logout = document.querySelector('#logout');
-console.log(logout);
 logout.addEventListener('click', (e) => {
   e.preventDefault();
   auth.signOut();
 });
 
+// Signup
+function signup() {
+  // Get user info
+  let email = document.querySelector('#signup-email').value;
+  let password = document.querySelector('#signup-password').value;
+
+  // Sign up the user
+  auth.createUserWithEmailAndPassword(email, password).then(cred => {
+    // Reset the form field input
+    let signupForm = document.querySelector('#signup-form');
+    signupForm.reset();
+    // Enter home page
+    showPage("home");
+  });
+}
+
+// Redisplays the auth container as signup form
+function goToSignup() {
+  document.querySelector("#authContainer").innerHTML = `
+  <form id="signup-form" onsubmit="signup()">
+    <div id="auth-header">
+      <h1>Sign up</h1>
+    </div>
+    <div id="auth-content">
+      <label for="email">Email</label>
+      <input type="email" id="signup-email" placeholder="type here" required />
+      <label for="password">Password</label>
+      <input type="password" id="signup-password" placeholder="type here" required>
+    </div>
+    <div id="auth-actions">
+      <a id="go-to-button" onclick="goToLogin()">Already have an account?</a>
+      <button type="submit">Sign up</button>
+    </div>
+  </form>
+  `;
+}
+
+// Redisplays the auth container as login form
+function goToLogin() {
+  document.querySelector("#authContainer").innerHTML = `
+  <form id="login-form" onsubmit="login()">
+    <div id="auth-header">
+      <h1>Sign in</h1>
+    </div>
+    <div id="auth-content">
+      <label for="email">Email</label>
+      <input type="email" id="login-email" placeholder="type here" required />
+      <label for="password">Password</label>
+      <input type="password" id="login-password" placeholder="type here" required>
+    </div>
+    <div id="auth-actions">
+      <a id="go-to-button" onclick="goToSignup()">Already have an account?</a>
+      <button type="submit">Sign in</button>
+    </div>
+  </form>
+  `;
+}
+
 // ========== Party Manager functionality ====== //
 
+// Retrieving parties from firestore
 partyRef.onSnapshot(function(snapshotData) {
   let parties = snapshotData.docs;
   appendParties(parties);
 });
 
+// Append list of parties
 function appendParties(parties) {
   let htmlTemplate = "";
   for (let party of parties) {
-    console.log(party.id);
-    console.log(party.data().name);
+    // Create array of character levels for average calculation
+    let characterLevels = [];
+    for (let character of party.data().characters) {
+      // Remembering to parse for actual numbers
+      characterLevels.push(JSON.parse(character.level));
+    }
+
     htmlTemplate += `
     <article>
       <h3>${party.data().name}</h3>
-      <p># of characters ${party.data().amount}</p>
-      <p>|</p>
-      <p>Avg. level ${party.data().level}</p>
-      <button onclick="saveSessionStorage">Use Party</button>
-      <button onclick="selectParty('${party.id}', '${party.data().name}', '${party.data().level}' )">Edit</button>
+      <p>${party.data().characters.length} characters | Avg. level ${calcAvgLvl(characterLevels)}</p>
+      <button onclick="selectParty('${party.id}')">Use Party</button>
+      <button onclick="editParty('${party.id}', '${party.data().name}', '${party.data().level}')">Edit</button>
       <button onclick="deleteParty('${party.id}')">Delete</button>
     </article>
     `;
@@ -181,10 +255,31 @@ function appendParties(parties) {
 
 }
 
+// Upload party values to encounter builder
+function selectParty(id) {
+  // Get party from firestore
+  partyRef.doc(id).onSnapshot(function(doc) {
+    console.log("Current data: ", doc.data());
 
+    // Get name from snapshot data
+    let selectedParty = doc.data().name;
 
-// add another character input box ///
+    // Get array of levels from snapshot data
+    let selectedPartyLevels = [];
+    for (let character of doc.data().characters) {
+      // Remembering to parse for actual numbers
+      selectedPartyLevels.push(JSON.parse(character.level));
+    }
 
+    // Set party values in session storage
+    sessionStorage.setItem("selectedParty", selectedParty);
+    sessionStorage.setItem("selectedPartyLevels", JSON.stringify(selectedPartyLevels));
+
+    // Show builder and append party
+    showPage('builder');
+    loadMonsters();
+  });
+}
 
 // W3S modal functionality //
 // Get the modal
@@ -202,11 +297,13 @@ function openModal(btn) {
 }
 
 function closeModal(btn) {
+  sessionStorage.removeItem("characters");
   modal.style.display = "none";
 }
 
 // When the user clicks on <span> (x), close the modal
 span.onclick = function() {
+  sessionStorage.removeItem("characters");
   modal.style.display = "none";
 }
 
@@ -219,47 +316,71 @@ window.onclick = function(event) {
 
 // ===== CREATE PARTY =======//
 function createParty() {
-  // references to the input fields
-  let newParty = [];
-  for (let i = 0; i < characterCount; i++) {
-    let nameInput = document.querySelector('#name');
-    let levelInput = document.querySelector(`#character${i}Level`);
-    console.log(nameInput.value);
-    console.log(levelInput.value);
+  // Get array of characters
+  let characters = readCharacterInputs();
 
-    let newCharacter = {
-      name: nameInput.value,
-      level: levelInput.value
-    };
-    newParty.push(newCharacter);
+  // Get party name and combine with characters
+  let nameInput = document.querySelector('#name');
+  if (nameInput.value == "") {
+    console.log("Make up a name!");
+    return;
   }
 
+  let newParty = {
+    name: nameInput.value,
+    characters: characters
+  };
+
+  // Upload to firebase firestore
+  console.log(newParty);
   partyRef.add(newParty);
 }
 
-//character count //
-function appendCharacterInputs() {
-  let characterCount = sessionStorage.getItem("characterCount");
-  let newParty = [];
+// Read values of characters
+// Updates to sessionStorage and returns the array of objects as well
+function readCharacterInputs() {
+  // Get characters
+  let characters = JSON.parse(sessionStorage.getItem("characters"));
+  let updatedCharacters = [];
 
-  for (let i = 0; i < characterCount - 1; i++) {
-    let nameInput = document.querySelector('#name');
-    let levelInput = document.querySelector(`#character${i}Level`);
-
-    let newCharacter = {
-      name: nameInput.value,
-      level: levelInput.value
-    };
-    newParty.push(newCharacter);
+  // Read and save the characters for saving in sessionStorage
+  for (let i = 0; i < characters.length; i++) {
+    // Check if characterDiv exists
+    let characterDiv = document.querySelector(`#newCharacter${i}`);
+    if (characterDiv == null) { // If it doesn't exist
+      // Do nothing
+    } else {
+      // Else read and save the character
+      //let nameInput = document.querySelector(`#character${i}name`);
+      let levelInput = document.querySelector(`#character${i}Level`);
+      //console.log(nameInput);
+      let updatedCharacter = {
+        //name: nameInput.value,
+        level: levelInput.value
+      };
+      updatedCharacters.push(updatedCharacter);
+    }
   }
+  sessionStorage.setItem("characters", JSON.stringify(updatedCharacters));
+  return updatedCharacters;
+}
 
+// Append character inputs from session storage "characters"
+function appendCharacterInputs() {
+  // Get the array of characters
+  let characters = JSON.parse(sessionStorage.getItem("characters"));
+
+  // Clear #characterContainer
   document.querySelector('#characterContainer').innerHTML = "";
+  console.log(characters);
+  // Append to DOM
   let htmlTemplate = "";
-  for (let i = 0; i < characterCount; i++) {
+  for (let i = 0; i < characters.length; i++) {
     htmlTemplate += `
-    <div id="newCharacter">
-    <span id="slider${i}Value">1</span>
-    <input oninput="updateSliderValue(${i})" class="slider" id="character${i}Level" type="range" min="1" max="20" value="${returnCharacterDefaults(newParty, i, "level")}">
+    <div id="newCharacter${i}">
+    <span id="slider${i}Value">${characters[i].level}</span>
+    <input oninput="updateSliderValue(${i})" class="slider" id="character${i}Level" type="range" min="1" max="20" value="${characters[i].level}">
+    <button onclick="deleteCharacter(${i})">Delete</button>
     </div>
     `
   }
@@ -268,67 +389,60 @@ function appendCharacterInputs() {
 
 // If no values given, return defaults
 function returnCharacterDefaults(characterArray, iteration, property) {
-  // Check if characterArray[i].property exists
-  if (characterArray[iteration].property == null) {
-    console.log("I set value to default");
+  // Check if characterArray[i] exists
+  if (characterArray[iteration] == undefined) { // If an object does not exist
     if (property == "level") {
       return 1; // Return default
     } else if (property == "name") {
       return;
     }
   } else {
-    console.log("I set value to the "+property+" value");
-    return characterArray[iteration].property; // Return value
+    return characterArray[iteration][property]; // Return value
   }
 }
 
+// Resets characters upon opening create modal
 function resetCharacterCount() {
-  let characterCount = 1;
-  sessionStorage.setItem("characterCount", characterCount);
+  let characters = JSON.parse(sessionStorage.getItem("characters"));
+  characters = [{
+    //name: "",
+    level: 1
+  }];
+  sessionStorage.setItem("characters", JSON.stringify(characters));
+  appendCharacterInputs();
 }
 
-function addMember() {
-  let characterCount = sessionStorage.getItem("characterCount");
-  characterCount++;
-  sessionStorage.setItem("characterCount", characterCount);
+// Add a character input
+function addCharacter() {
+  // Read and get the array of characters
+  let characters = readCharacterInputs()
+
+  // Insert empty array
+  let defaultObject = {
+    //name: "",
+    level: 1
+  };
+  characters.push(defaultObject);
+
+  // Update to session storage and append
+  sessionStorage.setItem("characters", JSON.stringify(characters));
   appendCharacterInputs();
 
 }
 
-function deleteMember() {
-  sessionStorage.getItem(characterCount);
-  characterCount--;
-  sessionStorage.setItem("characterCount", characterCount);
+// Delete chosen character from index
+function deleteCharacter(index) {
+  // Read and get array of characters
+  let characters = readCharacterInputs()
+
+  // Remove the value from the array
+  characters.splice(index, 1);
+
+  // Update to session storage and append
+  sessionStorage.setItem("characters", JSON.stringify(characters));
+  appendCharacterInputs();
 
 }
-
-// ========== UPDATE PARTY ==========//
-
-// function selectParty(id, name, members, level) {
-// references to the input fields
-//   let nameInput = document.querySelector('#name-update');
-// let membersInput = document.querySelector('#members-update');
-// let levelInput = document.querySelector('#level-update');
-// nameInput.value = name;
-// membersInput.value = members;
-// levelInput.value = level;
-// console.log(id);
-// selectedPartyId = id;
-// }
-
-// function updateParty() {
-// let nameInput = document.querySelector('#name-update');
-//   let membersInput = document.querySelector('#members-update');
-//   let levelInput = document.querySelector('#level-update');
-
-//   let partyToUpdate = {
-//   name: nameInput.value,
-//   members: membersInput.value,
-//   level: levelInput.value
-//   };
-//   partyRef.doc(selectedPartyId).set(partyToUpdate);
-
-// }
 
 // ========== DELETE PARTY ========== //
 function deleteParty(id) {
@@ -353,52 +467,11 @@ function updateSliderValue(index) {
 
 }
 
-
-//====== SAVE TO SESSION STORAGE ======//
-function saveSessionStorage() {
-  let i = 0;
-  let name = document.querySelector("#name").value;
-  let level = document.querySelector(`#character${i}Level`).value;
-  console.log(name);
-  console.log(level);
-
-  // store value in session storage
-  sessionStorage.setItem("name", name);
-  sessionStorage.setItem("level", level);
-  // call loadFromStorage to update displayed values
-  loadFromStorage();
-
-  let sessionSavedName = sessionStorage.getItem("name");
-  let sessionSavedLevel = sessionStorage.getItem("level");
-  console.log("sessionSavedName", sessionSavedName);
-  console.log("sessionSavedLevel", sessionSavedLevel);
-
-  // set input field with email values from storage
-
-  document.querySelector("#name").value = sessionSavedName;
-  document.querySelector("`#character${i}Level`").value = sessionSavedLevel;
-
-  // set span tags with email values from storage
-
-
-}
-
-loadFromStorage();
-
-
-
-
-
 // =========== Encounter Builder functionality =========== //
-
-/* TO-DO:
-- ability to add monsters to encounter via session storage and display in summary
-- ?
-*/
 
 // Creating the party's levels, and from there the amount of characters
 // For now, a bootleg version of a party recieved from sessionStorage, aka. one I make.
-function tempCreateParty() {
+/*function tempCreateParty() {
   let selectedParty = sessionStorage.getItem("selectedParty");
   if (selectedParty == null) {
     selectedParty = "The Mighty Nein";
@@ -409,12 +482,13 @@ function tempCreateParty() {
     selectedPartyLevels = [7, 7, 7, 7, 6, 6, 6];
     sessionStorage.setItem("selectedPartyLevels", JSON.stringify(selectedPartyLevels));
   }
-}
+}*/
 
 // Append the party to the DOM
 function appendPartyOnLoad() {
   // Get the values from session storage
   let selectedParty = sessionStorage.getItem("selectedParty");
+  console.log(sessionStorage.getItem("selectedPartyLevels"));
   let selectedPartyLevels = JSON.parse(sessionStorage.getItem("selectedPartyLevels"));
 
   // Append the values
@@ -426,12 +500,6 @@ function appendPartyOnLoad() {
   // Correct summary difficulty
   appendSummaryDifficulty();
 }
-
-// Easy reference to the '5e SRD monster' json link
-let monsterJson = 'https://dl.dropboxusercontent.com/s/iwz112i0bxp2n4a/5e-SRD-Monsters.json'
-// NOTE: monsters in Dungeons and Dragons all have unique names. Therefore, we can treat names as ids.
-
-let monsters = [];
 
 // load and append json monster data to the DOM
 function loadMonsters() {
@@ -458,18 +526,21 @@ function loadMonsters() {
       }
       document.querySelector("#monsterTable").innerHTML += htmlTemplate;
 
+      // Make selectedMonsters if none, to avoid bug on appendSummaryDifficulty
+      let selectedMonsters = JSON.parse(sessionStorage.getItem("selectedMonsters"));
+      console.log("I was here")
+      if (selectedMonsters == null) {
+        selectedMonsters = [];
+        sessionStorage.setItem("selectedMonsters", JSON.stringify(selectedMonsters));
+      }
+
       // Also, call all other functions which needs to load; (helps to append on refresh)
       // Some of these functions rely on monsters to have finished loading before being called. therefore we called them from here instead of if (location.hash == '#builder').
-      tempCreateParty();
       appendPartyOnLoad();
       appendSummary();
+
     });
 }
-
-// If refresh in #builder
-if (location.hash == "#builder") {
-  loadMonsters();
-};
 
 // Add monster to session storage
 function addToSummary(monsterName) {

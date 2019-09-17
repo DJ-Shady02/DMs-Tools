@@ -36,43 +36,30 @@
 
 
     <!-- Trigger/Open The Modal -->
-<button onclick="openModal(this), resetCharacterCount(), appendCharacterInputs()">Create New Party</button>
+    <button onclick="openModal(this), resetCharacterCount()">Create New Party</button>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
 
-  <!-- Modal content -->
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <form id="userForm">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="userForm">
 
-    <input type="text" id="name" placeholder="ENTER PARTY NAME..." required>
-    <p># of characters:  | Average party level:</p>
-    <div id="session-storage-name"></div>
-<section id="member-container" >
-  <h2> Amount | Level </h2>
-  <div id="characterContainer">
-    <div id="newCharacter">
+          <input type="text" id="name" placeholder="ENTER PARTY NAME..." required>
+          <p># of characters: | Average party level:</p>
+          <div id="session-storage-name"></div>
+          <section id="member-container">
+            <h2> Amount | Level </h2>
+            <div id="characterContainer"></div>
+          </section>
+
+          <button id="addLevel" type="button" name="button" onclick="addCharacter()">ADD CHARACTER</button>
+          <button type="button" name="button" onclick="createParty(), closeModal(this)">Save Party</button>
+        </form>
+      </div>
+
     </div>
-  </div>
-    <!--<form>
-      <h2>Update Party</h2>
-      <input type="text" id="name-update" required>
-      <input type="number" id="members-update" required>
-      <input type="number" id="level-update" required>
-      <button type="button" name="button" onclick="updateParty(), showPage('party')" >Update Party</button>
-    </form> -->
-
-</section>
-
-
-
-  <button id="addLevel" type="button" name="button" onclick="addMember()">ADD CHARACTER</button>
-    <button type="button" name="button" onclick="createParty(), closeModal(this)">Save Party</button>
-  </form>
-  </div>
-
-</div>
   </section>
 
 
@@ -89,7 +76,7 @@
       <button id="builderPartyManager">Choose Party</button>
       <p id="builderPartyInfo"># Characters | Avg. Level #</p>
     </section>
-    
+
     <!-- To-do: Search, filter -->
 
     <!-- Table of monsters -->
@@ -150,7 +137,7 @@
     </header>
     <!-- firebase auth container -->
     <section id="authContainer">
-      <form id="login-form"></form>
+      <form id="login-form" onsubmit="login()"></form>
     </section>
 
   </section>
@@ -159,7 +146,7 @@
   <div id="loader">
     <div class="spinner"></div>
   </div>
-  
+
   <!-- The core Firebase JS SDK is always required and must be listed first -->
   <script src="https://www.gstatic.com/firebasejs/6.4.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/6.4.2/firebase-auth.js"></script>
