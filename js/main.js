@@ -596,25 +596,27 @@ function appendSummaryDifficulty() {
   // Returns Total XP
   let totalXp = calcTotalXp();
 
+  // Returns modifier
+  let encounterModifier = calcEncounterMultiplier();
+
+  // Adjusted XP calculation
+  let axp = totalXp * encounterModifier;
+
   // Determine the difficulty through threshold and totalXP
   let difficulty = "";
-  if (totalXp >= thresholds.deadly) {
+  if (axp >= thresholds.deadly) {
     difficulty = "Deadly";
-  } else if (totalXp >= thresholds.hard) {
+  } else if (axp >= thresholds.hard) {
     difficulty = "Hard";
-  } else if (totalXp >= thresholds.medium) {
+  } else if (axp >= thresholds.medium) {
     difficulty = "Medium";
-  } else if (totalXp >= thresholds.easy) {
+  } else if (axp >= thresholds.easy) {
     difficulty = "Easy";
-  } else if (totalXp == 0) { // If none selected
+  } else if (axp == 0) { // If none selected
     difficulty = "None";
   } else { // If lower than easy
     difficulty = "Trivial";
   }
-
-  let encounterModifier = calcEncounterMultiplier();
-
-  let axp = totalXp * encounterModifier;
 
   let htmlTemplate = `
   <div>
