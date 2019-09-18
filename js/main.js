@@ -1,6 +1,7 @@
 "use strict";
 
 // =========== Single Page Application functionality =========== //
+// Martin, Down to line 46
 
 // hide all pages
 function hideAllPages() {
@@ -41,6 +42,8 @@ function setDefaultPage() {
 }
 
 setDefaultPage();
+
+// Jakob, Down to line 229
 
 // show a spinning loader when loading
 function showLoader(show) {
@@ -223,6 +226,7 @@ function goToLogin() {
 }
 
 // ========== Party Manager functionality ====== //
+// Martin, Down to line 46
 
 // Retrieving parties from firestore
 partyRef.onSnapshot(function(snapshotData) {
@@ -468,6 +472,7 @@ function updateSliderValue(index) {
 }
 
 // =========== Encounter Builder functionality =========== //
+// Jakob, All the way down
 
 // Creating the party's levels, and from there the amount of characters
 // For now, a bootleg version of a party recieved from sessionStorage, aka. one I make.
