@@ -226,7 +226,7 @@ function goToLogin() {
 }
 
 // ========== Party Manager functionality ====== //
-// Martin, Down to line 46
+// Martin, Down to line 461
 
 // Retrieving parties from firestore
 partyRef.onSnapshot(function(snapshotData) {
@@ -389,20 +389,6 @@ function appendCharacterInputs() {
     `
   }
   document.querySelector('#characterContainer').innerHTML = htmlTemplate;
-}
-
-// If no values given, return defaults
-function returnCharacterDefaults(characterArray, iteration, property) {
-  // Check if characterArray[i] exists
-  if (characterArray[iteration] == undefined) { // If an object does not exist
-    if (property == "level") {
-      return 1; // Return default
-    } else if (property == "name") {
-      return;
-    }
-  } else {
-    return characterArray[iteration][property]; // Return value
-  }
 }
 
 // Resets characters upon opening create modal
